@@ -27,4 +27,4 @@ vkbottle
 
 
 # [Telegram разработчика](https://t.me/vladislav_osipov89)
-# [ВКонтакте разработчика]([https://t.me/vladislav_osipov89](https://vk.com/v.nazukin)
+# [ВКонтакте разработчика](https://vk.com/v.nazukin)
