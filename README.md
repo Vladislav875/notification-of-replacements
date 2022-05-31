@@ -26,6 +26,5 @@ vkbottle
 > `stickers` - ID стикеров для рандомной отправкой перед сообщением о начале проверки замен
 
 
-# Контакты разработчика
-> Telegram - https://t.me/vladislav_osipov89
-> ВКонтакте - https://vk.com/v.nazukin
+# [Telegram разработчика](https://t.me/vladislav_osipov89)
+# [ВКонтакте разработчика]([https://t.me/vladislav_osipov89](https://vk.com/v.nazukin))
