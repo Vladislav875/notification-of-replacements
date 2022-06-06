@@ -9,17 +9,10 @@ import requests
 from vkbottle.bot import Bot
 
 logging.basicConfig(filename='logs.log', filemode='w',
-                    format='%(asctime)s | %(levelname)s: %(message)s',
-                    level=logging.WARNING)
+                    level=logging.INFO)
 
 settings = json.load(open("settings.json", 'rb'))
 # Подгрузка настроек
-
-TOKEN = settings.get("token")
-api = Bot(token=TOKEN)
-print(f"Load. Logging (token: {TOKEN})")
-logging.info(f"Токен подгружен. Бот работает.")
-myVK_ID = settings.get("peer_id")
 
 u1HOUR = 3600  # 1 час
 u1DAY = 86400  # день
@@ -27,12 +20,13 @@ notFindChangesSleepDelay = u1HOUR * 4
 group = settings.get("group").upper()
 lastNotification = None  # Когда было посление уведомление о заменах
 
-stickers = settings.get("stickers")
-
-
 async def main():
     global lastNotification
     bchanges = False
+    myVK_ID = settings.get("peer_id")
+    TOKEN = settings.get("token")
+    api = Bot(token=TOKEN)
+    # print(f"Load. Logging (token: {TOKEN})")
     try:
         today = datetime.date.today() + datetime.timedelta(days=1)
         # print("lastNotification", lastNotification, "\ntoday", today)
@@ -43,13 +37,14 @@ async def main():
         dayformat = today.day if len(str(today.day)) == 2 else "0" + str(today.day)
         changes = requests.get(f"http://tpcol.ru/images/Расписание_и_Замены/{dayformat}.{monthformat}.{today.year}.xlsx")
         # http://tpcol.ru/images/Расписание_и_Замены/26.05.2022.xlsx
-        if stickers:
-            await api.api.messages.send(peer_id=myVK_ID,
-                                        random_id=random.randrange(999999),
-                                        sticker_id=stickers[random.randrange(len(stickers))])
-        await api.api.messages.send(peer_id=myVK_ID,
-                                    random_id=random.randrange(999999),
-                                    message=f"Проверяю замены на {today.day}.{monthformat}.{today.year} для группы \"{group}\".")
+
+        # if settings.get("stickers"):
+        #     await api.api.messages.send(peer_id=myVK_ID,
+        #                                 random_id=random.randrange(999999),
+        #                                 sticker_id=settings.get("stickers")[random.randrange(len(settings.get("stickers")))])
+        # await api.api.messages.send(peer_id=myVK_ID,
+        #                             random_id=random.randrange(999999),
+        #                             message=f"Проверяю замены на {today.day}.{monthformat}.{today.year} для группы \"{group}\".")
         if changes.status_code == 200 and "<!DOCTYPE html>" not in str(changes.content):  # Файл есть
             logging.info(f"Ищем замену на {today.day}.{monthformat}.{today.year}. Файл скачен")
             open(f"{today.day}.{monthformat}.{today.year}.xlsx", "wb").write(changes.content)
@@ -76,9 +71,9 @@ async def main():
                                                         f"выполнении произошла ошибка, иди проверь.\n\n{e}")
                     logging.info(f"Замена найдена, но при выполнении произошла ошибка. {e}")
             if not bchanges:
-                await api.api.messages.send(peer_id=myVK_ID,
-                                            random_id=random.randrange(999999),
-                                            message=f"Замен для группы \"{group}\" нету, но возможно я ошибаюсь...")
+                # await api.api.messages.send(peer_id=myVK_ID,
+                #                             random_id=random.randrange(999999),
+                #                             message=f"Замен для группы \"{group}\" нету, но возможно я ошибаюсь...")
                 logging.info(f"Замен на {today.day}.{monthformat}.{today.year} для группы \"{group}\" нету.")
                 lastNotification = today
         else:
@@ -107,7 +102,10 @@ async def main():
 
 
 if __name__ == "__main__":
+    logging.info(f"Токен подгружен. Бот работает.")
     while True:
+        logging.info(f"Начинаем проверять замены по циклу")
+
         loop = asyncio.new_event_loop()
         tasks = [
             loop.create_task(main())
