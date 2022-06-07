@@ -21,17 +21,16 @@ group = settings.get("group").upper()
 lastNotification = None  # Когда было посление уведомление о заменах
 
 async def main():
-    global lastNotification
+    global lastNotification, settings
+    settings = json.load(open("settings.json", 'rb'))
+    # Подгрузка настроек
     bchanges = False
     myVK_ID = settings.get("peer_id")
     TOKEN = settings.get("token")
     api = Bot(token=TOKEN)
-    # print(f"Load. Logging (token: {TOKEN})")
     try:
-        today = datetime.date.today() #+ datetime.timedelta(days=1)
-        # print("lastNotification", lastNotification, "\ntoday", today)
-        if lastNotification == today:  # or datetime.datetime.now().hour <= 15
-            # <= 15 что бы он с самого утра не проверял каждый час появление замен
+        today = datetime.date.today() + datetime.timedelta(days=1)
+        if lastNotification == today:
             raise ChildProcessError
         monthformat = today.month if len(str(today.month)) == 2 else "0" + str(today.month)
         dayformat = today.day if len(str(today.day)) == 2 else "0" + str(today.day)
@@ -77,7 +76,7 @@ async def main():
                 lastNotification = today
         else:
             logging.info(
-                f"Замены на {today.day}.{monthformat}.{today.year} ещё не выложили. Проверю ещё раз через 4 часа")
+                f"Замены на {today.day}.{monthformat}.{today.year} ещё не выложили. Проверю ещё раз через 1 час")
             # await api.api.messages.send(peer_id=myVK_ID,
             #                             random_id=random.randrange(999999),
             #                             message=f"Замены на {today.day}.{monthformat}.{today.year} "
