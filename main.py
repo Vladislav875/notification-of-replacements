@@ -28,7 +28,7 @@ async def main():
     api = Bot(token=TOKEN)
     # print(f"Load. Logging (token: {TOKEN})")
     try:
-        today = datetime.date.today() + datetime.timedelta(days=1)
+        today = datetime.date.today() #+ datetime.timedelta(days=1)
         # print("lastNotification", lastNotification, "\ntoday", today)
         if lastNotification == today:  # or datetime.datetime.now().hour <= 15
             # <= 15 что бы он с самого утра не проверял каждый час появление замен
@@ -37,15 +37,14 @@ async def main():
         dayformat = today.day if len(str(today.day)) == 2 else "0" + str(today.day)
         changes = requests.get(f"http://tpcol.ru/images/Расписание_и_Замены/{dayformat}.{monthformat}.{today.year}.xlsx")
         # http://tpcol.ru/images/Расписание_и_Замены/26.05.2022.xlsx
-
-        # if settings.get("stickers"):
-        #     await api.api.messages.send(peer_id=myVK_ID,
-        #                                 random_id=random.randrange(999999),
-        #                                 sticker_id=settings.get("stickers")[random.randrange(len(settings.get("stickers")))])
-        # await api.api.messages.send(peer_id=myVK_ID,
-        #                             random_id=random.randrange(999999),
-        #                             message=f"Проверяю замены на {today.day}.{monthformat}.{today.year} для группы \"{group}\".")
         if changes.status_code == 200 and "<!DOCTYPE html>" not in str(changes.content):  # Файл есть
+            if settings.get("stickers"):
+                await api.api.messages.send(peer_id=myVK_ID,
+                                            random_id=random.randrange(999999),
+                                            sticker_id=settings.get("stickers")[random.randrange(len(settings.get("stickers")))])
+            await api.api.messages.send(peer_id=myVK_ID,
+                                        random_id=random.randrange(999999),
+                                        message=f"Проверяю замены на {today.day}.{monthformat}.{today.year} для группы \"{group}\".")
             logging.info(f"Ищем замену на {today.day}.{monthformat}.{today.year}. Файл скачен")
             open(f"{today.day}.{monthformat}.{today.year}.xlsx", "wb").write(changes.content)
             changesexcel = pd.read_excel(f'{today.day}.{monthformat}.{today.year}.xlsx')
@@ -71,9 +70,9 @@ async def main():
                                                         f"выполнении произошла ошибка, иди проверь.\n\n{e}")
                     logging.info(f"Замена найдена, но при выполнении произошла ошибка. {e}")
             if not bchanges:
-                # await api.api.messages.send(peer_id=myVK_ID,
-                #                             random_id=random.randrange(999999),
-                #                             message=f"Замен для группы \"{group}\" нету, но возможно я ошибаюсь...")
+                await api.api.messages.send(peer_id=myVK_ID,
+                                            random_id=random.randrange(999999),
+                                            message=f"Замен для группы \"{group}\" нету.")
                 logging.info(f"Замен на {today.day}.{monthformat}.{today.year} для группы \"{group}\" нету.")
                 lastNotification = today
         else:
