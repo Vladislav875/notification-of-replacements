@@ -18,7 +18,8 @@ u1HOUR = 3600  # 1 час
 u1DAY = 86400  # день
 notFindChangesSleepDelay = u1HOUR * 4
 group = settings.get("group").upper()
-lastNotification = None if settings.get("startNotification", False) else datetime.date.today()
+lastNotification = None if settings.get("startNotification", False) else datetime.date.today() + datetime.timedelta(days=1)
+# False - не будет оповещения на некст день сразу после запуска, True - будет
 # Ставим когда было последние уведомление о заменах
 
 
