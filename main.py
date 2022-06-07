@@ -18,7 +18,9 @@ u1HOUR = 3600  # 1 час
 u1DAY = 86400  # день
 notFindChangesSleepDelay = u1HOUR * 4
 group = settings.get("group").upper()
-lastNotification = None  # Когда было посление уведомление о заменах
+lastNotification = None if settings.get("startNotification", False) else datetime.date.today()
+# Ставим когда было последние уведомление о заменах
+
 
 async def main():
     global lastNotification, settings
@@ -43,7 +45,7 @@ async def main():
                                             sticker_id=settings.get("stickers")[random.randrange(len(settings.get("stickers")))])
             await api.api.messages.send(peer_id=myVK_ID,
                                         random_id=random.randrange(999999),
-                                        message=f"Проверяю замены на {today.day}.{monthformat}.{today.year} для группы \"{group}\".")
+                                        message=f"@all Проверяю замены на {today.day}.{monthformat}.{today.year} для группы \"{group}\".")
             logging.info(f"Ищем замену на {today.day}.{monthformat}.{today.year}. Файл скачен")
             open(f"{today.day}.{monthformat}.{today.year}.xlsx", "wb").write(changes.content)
             changesexcel = pd.read_excel(f'{today.day}.{monthformat}.{today.year}.xlsx')
