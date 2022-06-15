@@ -14,9 +14,9 @@ logging.basicConfig(filename='logs.log', filemode='w',
 settings = json.load(open("settings.json", 'rb'))
 # Подгрузка настроек
 
-u1MINUTE = 60 # 1 минута
-u1HOUR = 3600  # 1 час
-u1DAY = 86400  # день
+u1MINUTE = 600  # 1 минута
+u1HOUR = 3600   # 1 час
+u1DAY = 86400   # день
 notFindChangesSleepDelay = u1HOUR * 4
 group = settings.get("group").upper()
 lastNotification = None if settings.get("startNotification", False) else datetime.date.today() + datetime.timedelta(days=1)
@@ -36,23 +36,23 @@ async def main():
         today = datetime.date.today() + datetime.timedelta(days=1)
         if lastNotification == today:
             raise ChildProcessError
-        elif today.isoweekday() == 7:
-            raise BrokenPipeError
+        # elif today.isoweekday() == 7:
+        #     raise BrokenPipeError
         monthformat = today.month if len(str(today.month)) == 2 else "0" + str(today.month)
         dayformat = today.day if len(str(today.day)) == 2 else "0" + str(today.day)
         changes = requests.get(f"http://tpcol.ru/images/Расписание_и_Замены/{dayformat}.{monthformat}.{today.year}.xlsx")
         # http://tpcol.ru/images/Расписание_и_Замены/26.05.2022.xlsx
         if changes.status_code == 200 and "<!DOCTYPE html>" not in str(changes.content):  # Файл есть
+            logging.info(f"Ищем замену на {today.day}.{monthformat}.{today.year}. Файл скачен")
+            open(f"{today.day}.{monthformat}.{today.year}.xlsx", "wb").write(changes.content)
+            changesexcel = pd.read_excel(f'{today.day}.{monthformat}.{today.year}.xlsx')
             if settings.get("stickers"):
                 await api.api.messages.send(peer_id=myVK_ID,
                                             random_id=random.randrange(999999),
                                             sticker_id=settings.get("stickers")[random.randrange(len(settings.get("stickers")))])
             await api.api.messages.send(peer_id=myVK_ID,
                                         random_id=random.randrange(999999),
-                                        message=f"@all Проверяю замены на {today.day}.{monthformat}.{today.year} для группы \"{group}\".")
-            logging.info(f"Ищем замену на {today.day}.{monthformat}.{today.year}. Файл скачен")
-            open(f"{today.day}.{monthformat}.{today.year}.xlsx", "wb").write(changes.content)
-            changesexcel = pd.read_excel(f'{today.day}.{monthformat}.{today.year}.xlsx')
+                                        message=f"@all {str(changesexcel.keys()[4]).capitalize()} для группы \"{group}\".")
             for i in changesexcel.itertuples():
                 try:
                     name_group_change = str(i[4]).upper()
@@ -87,6 +87,7 @@ async def main():
             #                             random_id=random.randrange(999999),
             #                             message=f"Замены на {today.day}.{monthformat}.{today.year} "
             #                                     f"ещё не выложили или их нет. Перепроверю ещё раз через 4 часа")
+            await asyncio.sleep(u1MINUTE * 10)
             raise NotImplementedError
         try:
             os.remove(f"{today.day}.{monthformat}.{today.year}.xlsx")
