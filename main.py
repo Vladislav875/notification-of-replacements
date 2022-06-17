@@ -44,6 +44,7 @@ async def main():
         # http://tpcol.ru/images/Расписание_и_Замены/26.05.2022.xlsx
         if changes.status_code == 200 and "<!DOCTYPE html>" not in str(changes.content):  # Файл есть
             logging.info(f"Ищем замену на {today.day}.{monthformat}.{today.year}. Файл скачен")
+            lastNotification = today
             open(f"{today.day}.{monthformat}.{today.year}.xlsx", "wb").write(changes.content)
             changesexcel = pd.read_excel(f'{today.day}.{monthformat}.{today.year}.xlsx')
             if settings.get("stickers"):
@@ -67,7 +68,6 @@ async def main():
 🤓 Замена на: {i[6]}
 👥 Преподаватель: {i[5]}
 🏚 Кабинет: {i[7]} каб.""")
-                        lastNotification = today
                 except Exception as e:
                     await api.api.messages.send(peer_id=myVK_ID,
                                                 random_id=random.randrange(999999),
