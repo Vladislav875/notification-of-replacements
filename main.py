@@ -13,6 +13,7 @@ logging.basicConfig(filename='logs.log', filemode='w',
 
 settings = json.load(open("settings.json", 'rb'))
 # Подгрузка настроек
+lessons = None
 
 u1MINUTE = 600  # 1 минута
 u1HOUR = 3600   # 1 час
@@ -32,6 +33,9 @@ async def main():
     myVK_ID = settings.get("peer_id")
     TOKEN = settings.get("token")
     api = Bot(token=TOKEN)
+    with open("lessons.json") as lsfile:
+        lessons = json.load(lsfile)
+    # leassons = json.read()
     try:
         today = datetime.date.today() + datetime.timedelta(days=1)
         if lastNotification == today:
@@ -55,6 +59,8 @@ async def main():
             await api.api.messages.send(peer_id=myVK_ID,
                                         random_id=random.randrange(999999),
                                         message=f"@all {str(changesexcel.keys()[4]).capitalize()} для группы \"{group}\".")
+            colorweek = "red" if "красная" in str(changesexcel.keys()[4]).lower() else "green"
+            lessons: list = lessons.get(colorweek).get(str(today.isocalendar()[2]))
             for i in changesexcel.itertuples():
                 try:
                     name_group_change = str(i[4]).upper()
@@ -77,6 +83,7 @@ async def main():
                 lastNotification = today
             changeslist.sort()
             for lschange in changeslist:
+                lessons[int(lschange[0])-1] = str(lschange[1])
                 if lschange[1].lower() == "нет":
                     await api.api.messages.send(peer_id=myVK_ID,
                                                 random_id=random.randrange(999999),
@@ -85,11 +92,19 @@ async def main():
                     await api.api.messages.send(peer_id=myVK_ID,
                                                 random_id=random.randrange(999999),
                                                 message=f"""
-    🔔 Замена на {lschange[0]} паре
-    🤓 Замена на: {lschange[1]}
-    👥 Преподаватель: {lschange[2]}
-    🏚 Кабинет: {lschange[3]} каб.""")
-                
+🔔 Замена на {lschange[0]} паре
+🤓 Замена на: {lschange[1]}
+👥 Преподаватель: {lschange[2]}
+🏚 Кабинет: {lschange[3]} каб.""")
+            if lessons:
+                lresult = []
+                # lessons = (i,c for c,i in enumerate(lessons))
+                # Возможно это можно было сделать лучше, но было лень)
+                for c,i in enumerate(lessons):
+                    lresult.append(f"{c+1}) {i}")
+                await api.api.messages.send(peer_id=myVK_ID,
+                                            random_id=random.randrange(999999),
+                                            message="\n".join(lresult))
         else:
             logging.info(
                 f"Замены на {today.day}.{monthformat}.{today.year} ещё не выложили. Проверю ещё раз через 1 минуту")
